@@ -2,71 +2,60 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Schaufenster Allianz Senk</title>
+    <meta http-equiv="refresh" content="21600"> <title>Schaufenster Allianz Senk - Bad Honnef</title>
     <style>
         :root {
-            --allianz-gold: #a3890e; /* Das Gold aus deinem Logo */
-            --koenigsblau: #003781;  /* Klassisches Allianz Blau */
+            --allianz-gold: #a3890e;
+            --koenigsblau: #003781;
             --glass: rgba(255, 255, 255, 0.2);
             --glass-border: rgba(255, 255, 255, 0.3);
         }
 
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #000; }
 
-        /* Hintergrund-Diashow mit Zoom-Effekt (Ken Burns) */
         #slideshow {
             position: fixed; width: 100%; height: 100%;
             background-size: cover; background-position: center;
             transition: background-image 2s ease-in-out;
             z-index: 1;
-            transform: scale(1.05);
         }
 
-        /* Permanentes Logo oben rechts */
         #logo {
             position: absolute; top: 40px; right: 40px; width: 350px; z-index: 100;
             filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
         }
 
-        /* Wetter-Box mit Glass-Effekt */
         #weather-container {
             position: absolute; top: 40px; left: 40px; z-index: 10;
             background: var(--glass);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 20px; padding: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
-        /* News Ticker mit Glass-Effekt */
         #ticker-container {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            width: 90%; height: 80px; z-index: 10;
+            width: 92%; height: 85px; z-index: 10;
             background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: 40px;
-            display: flex; align-items: center; overflow: hidden;
+            border-radius: 42px; display: flex; align-items: center; overflow: hidden;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
         }
 
         #ticker-label {
             background: var(--allianz-gold); color: white;
             padding: 0 30px; height: 100%; display: flex; align-items: center;
-            font-weight: bold; font-size: 22px; letter-spacing: 1px;
-            border-right: 1px solid var(--glass-border);
+            font-weight: bold; font-size: 24px; border-right: 1px solid var(--glass-border);
         }
 
         #ticker-wrap { flex: 1; overflow: hidden; white-space: nowrap; }
 
         .ticker-move {
             display: inline-block; padding-left: 100%;
-            font-size: 26px; color: white; font-weight: 400;
-            animation: ticker-animation 45s linear infinite;
-            text-shadow: 1px 1px 5px rgba(0,0,0,0.3);
+            font-size: 28px; color: white;
+            animation: ticker-animation 50s linear infinite;
         }
 
         @keyframes ticker-animation {
@@ -74,10 +63,9 @@
             100% { transform: translate3d(-100%, 0, 0); }
         }
 
-        /* Uhrzeit Box (Hell & Freundlich) */
         #clock {
-            position: absolute; top: 250px; left: 40px; z-index: 10;
-            color: white; font-size: 40px; font-weight: 200;
+            position: absolute; top: 255px; left: 60px; z-index: 10;
+            color: white; font-size: 45px; font-weight: 300;
             text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
     </style>
@@ -86,7 +74,6 @@
 
     <div id="slideshow"></div>
     <img src="logo.png" id="logo" alt="Allianz Senk Logo">
-
     <div id="clock"></div>
 
     <div id="weather-container">
@@ -94,23 +81,34 @@
     </div>
 
     <div id="ticker-container">
-        <div id="ticker-label">AKTUELL</div>
+        <div id="ticker-label">ALLIANZ NEWS</div>
         <div id="ticker-wrap">
-            <div class="ticker-move" id="ticker-content">Lade Nachrichten...</div>
+            <div class="ticker-move" id="ticker-content">Lade aktuelle Meldungen...</div>
         </div>
     </div>
 
     <script>
-        // BILDERLISTE (Hier deine Dateinamen anpassen)
-        const imageFiles = ["bild1.jpg", "bild2.jpg", "bild3.jpg"]; 
+        // BILDER-LOGIK FÜR KARNEVAL 26
+        // Da die Dateien Leerzeichen und Klammern haben, nutzen wir encodeURIComponent
+        const baseNames = [
+            "karneval 26 (1).jpg",
+            "karneval 26 (2).jpg",
+            "karneval 26 (3).jpg",
+            "karneval 26 (4).jpg",
+            "karneval 26 (5).jpg"
+        ];
+
         let currentImg = 0;
         const slideElement = document.getElementById('slideshow');
 
         function nextSlide() {
-            slideElement.style.backgroundImage = `url('${imageFiles[currentImg]}')`;
-            currentImg = (currentImg + 1) % imageFiles.length;
+            // encodeURIComponent macht aus Leerzeichen "%20", damit der Browser das Bild findet
+            const safePath = encodeURIComponent(baseNames[currentImg]);
+            slideElement.style.backgroundImage = `url('${safePath}')`;
+            currentImg = (currentImg + 1) % baseNames.length;
         }
-        setInterval(nextSlide, 10000); // Alle 10 Sekunden
+        
+        setInterval(nextSlide, 10000); 
         nextSlide();
 
         // UHRZEIT
@@ -121,13 +119,13 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // NEWS (Tagesschau RSS)
+        // NEWS TICKER
         async function updateNews() {
             try {
                 const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.tagesschau.de%2Finfosrv%2Frss%2Fall%2F`);
                 const data = await res.json();
                 document.getElementById('ticker-content').innerText = data.items.map(i => i.title).join("  +++  ") + " +++ ";
-            } catch (e) { console.error("News error"); }
+            } catch (e) { console.error("News-Ticker konnte nicht geladen werden."); }
         }
         updateNews();
         setInterval(updateNews, 1800000);
