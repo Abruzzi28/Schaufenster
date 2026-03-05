@@ -2,7 +2,8 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="21600"> <title>Schaufenster Allianz Senk - Bad Honnef</title>
+    <meta http-equiv="refresh" content="21600">
+    <title>Allianz Senk Schaufenster</title>
     <style>
         :root {
             --allianz-gold: #a3890e;
@@ -11,12 +12,13 @@
             --glass-border: rgba(255, 255, 255, 0.3);
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #000; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #001a3d; }
 
+        /* Hintergrund-Diashow */
         #slideshow {
             position: fixed; width: 100%; height: 100%;
             background-size: cover; background-position: center;
-            transition: background-image 2s ease-in-out;
+            transition: background-image 1.5s ease-in-out;
             z-index: 1;
         }
 
@@ -25,29 +27,28 @@
             filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
         }
 
+        /* Wetter Box */
         #weather-container {
             position: absolute; top: 40px; left: 40px; z-index: 10;
             background: var(--glass);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid var(--glass-border);
-            border-radius: 20px; padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-radius: 20px; padding: 10px; overflow: hidden;
         }
 
+        /* News Ticker */
         #ticker-container {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            width: 92%; height: 85px; z-index: 10;
+            position: absolute; bottom: 40px; left: 5%; width: 90%; height: 80px; z-index: 10;
             background: var(--glass);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: 42px; display: flex; align-items: center; overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            border-radius: 40px; display: flex; align-items: center; overflow: hidden;
         }
 
         #ticker-label {
             background: var(--allianz-gold); color: white;
             padding: 0 30px; height: 100%; display: flex; align-items: center;
-            font-weight: bold; font-size: 24px; border-right: 1px solid var(--glass-border);
+            font-weight: bold; font-size: 22px;
         }
 
         #ticker-wrap { flex: 1; overflow: hidden; white-space: nowrap; }
@@ -55,7 +56,7 @@
         .ticker-move {
             display: inline-block; padding-left: 100%;
             font-size: 28px; color: white;
-            animation: ticker-animation 50s linear infinite;
+            animation: ticker-animation 60s linear infinite;
         }
 
         @keyframes ticker-animation {
@@ -64,8 +65,8 @@
         }
 
         #clock {
-            position: absolute; top: 255px; left: 60px; z-index: 10;
-            color: white; font-size: 45px; font-weight: 300;
+            position: absolute; top: 320px; left: 60px; z-index: 10;
+            color: white; font-size: 50px; font-weight: 300;
             text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
     </style>
@@ -73,45 +74,41 @@
 <body>
 
     <div id="slideshow"></div>
-    <img src="logo.png" id="logo" alt="Allianz Senk Logo">
+    <img src="logo.png" id="logo">
     <div id="clock"></div>
 
     <div id="weather-container">
-        <script type="text/javascript" src="https://www.booked.net/weather/widgets/js/?type=13&id=18151&name=Bad%20Honnef&caption=1&font=0&font_size=1&style=1&color=ffffff&sw_color=ffffff&be_color=ffffff&l_color=333333&v_color=333333&f_color=333333&p_color=333333&i_color=333333&f_weight=0&p_weight=0&i_weight=0&f_style=0&p_style=0&i_style=0&v_weight=0&v_style=0&p_s=0&i_s=0&v_s=0&v_p=0&v_i=0&v_n=0&v_c=0&v_t=0&v_d=1"></script>
+        <iframe src="https://www.wetter.de/deutschland/wetter-bad-honnef-18220804/wetterbericht-aktuell.html" 
+                style="width:300px; height:220px; border:none;" scrolling="no"></iframe>
     </div>
 
     <div id="ticker-container">
-        <div id="ticker-label">ALLIANZ NEWS</div>
+        <div id="ticker-label">AKTUELL</div>
         <div id="ticker-wrap">
-            <div class="ticker-move" id="ticker-content">Lade aktuelle Meldungen...</div>
+            <div class="ticker-move" id="ticker-content">Herzlich Willkommen bei der Allianz Vertretung Senk in Bad Honnef +++ Ihr Partner für Versicherung und Vorsorge +++</div>
         </div>
     </div>
 
     <script>
-        // BILDER-LOGIK FÜR KARNEVAL 26
-        // Da die Dateien Leerzeichen und Klammern haben, nutzen wir encodeURIComponent
-        const baseNames = [
-            "karneval 26 (1).jpg",
-            "karneval 26 (2).jpg",
-            "karneval 26 (3).jpg",
-            "karneval 26 (4).jpg",
-            "karneval 26 (5).jpg"
-        ];
-
-        let currentImg = 0;
+        // 1. BILDER-LOGIK (Automatisch 1 bis 14)
+        const totalImages = 14;
+        let currentImg = 1;
         const slideElement = document.getElementById('slideshow');
 
         function nextSlide() {
-            // encodeURIComponent macht aus Leerzeichen "%20", damit der Browser das Bild findet
-            const safePath = encodeURIComponent(baseNames[currentImg]);
-            slideElement.style.backgroundImage = `url('${safePath}')`;
-            currentImg = (currentImg + 1) % baseNames.length;
+            // Wir bauen den Namen exakt nach deinem Schema: karneval26 (1).jpg
+            // encodeURI kümmert sich um die Leerzeichen und Klammern
+            const fileName = `karneval26 (${currentImg}).jpg`;
+            slideElement.style.backgroundImage = `url("${encodeURI(fileName)}")`;
+            
+            currentImg++;
+            if (currentImg > totalImages) currentImg = 1;
         }
         
-        setInterval(nextSlide, 10000); 
+        setInterval(nextSlide, 8000); 
         nextSlide();
 
-        // UHRZEIT
+        // 2. UHRZEIT
         function updateClock() {
             const now = new Date();
             document.getElementById('clock').innerText = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
@@ -119,13 +116,24 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // NEWS TICKER
+        // 3. NEWS TICKER (Tagesschau via AllOrigins Proxy gegen "Lade"-Hänger)
         async function updateNews() {
+            const ticker = document.getElementById('ticker-content');
             try {
-                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.tagesschau.de%2Finfosrv%2Frss%2Fall%2F`);
+                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://www.tagesschau.de/infosrv/rss/all/')}`);
                 const data = await res.json();
-                document.getElementById('ticker-content').innerText = data.items.map(i => i.title).join("  +++  ") + " +++ ";
-            } catch (e) { console.error("News-Ticker konnte nicht geladen werden."); }
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+                const items = xmlDoc.getElementsByTagName("item");
+                let newsLine = "";
+                for (let i = 0; i < 10; i++) {
+                    newsLine += items[i].getElementsByTagName("title")[0].childNodes[0].nodeValue + "  +++  ";
+                }
+                ticker.innerText = newsLine;
+            } catch (e) {
+                console.log("News-Fehler, nutze Fallback");
+                ticker.innerText = "+++ Allianz Senk Bad Honnef +++ Schnelle Hilfe im Schadensfall +++ Jetzt beraten lassen +++ Ihr Team in Bad Honnef wünscht eine gute Fahrt +++";
+            }
         }
         updateNews();
         setInterval(updateNews, 1800000);
