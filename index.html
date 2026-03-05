@@ -8,147 +8,442 @@
         :root {
             --allianz-gold: #a3890e;
             --koenigsblau: #003781;
-            --glass: rgba(255, 255, 255, 0.15);
+            --glass-bg: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.45);
+            --text-light: #f5f7fb;
         }
 
-        body, html { 
-            margin: 0; padding: 0; height: 100%; width: 100%; 
-            overflow: hidden; background-color: #001a3d; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        * {
+            box-sizing: border-box;
         }
 
-        /* Hintergrund-Bilder */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: #000814;
+            color: var(--text-light);
+        }
+
+        /* Vollbild-Slideshow-Hintergrund mit Ken-Burns-Effekt */
         #slideshow {
-            position: fixed; width: 100%; height: 100%;
-            background-size: cover; background-position: center;
-            background-repeat: no-repeat;
-            transition: background-image 1.5s ease-in-out;
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
             z-index: 1;
         }
 
-        #logo { 
-            position: absolute; top: 40px; right: 40px; 
-            width: 350px; z-index: 100; 
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+        .slide {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 1.8s ease-in-out;
+            transform-origin: center center;
         }
 
-        /* Wetter Box */
+        .slide.active {
+            opacity: 1;
+        }
+
+        .slide.kenburns {
+            animation: kenburns 8s ease-in-out forwards;
+        }
+
+        @keyframes kenburns {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.08);
+            }
+        }
+
+        /* Permanentes Logo oben rechts */
+        #logo {
+            position: fixed;
+            top: 40px;
+            right: 32px;
+            width: 320px;
+            max-width: 30vw;
+            z-index: 100;
+            filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.6));
+        }
+
+        /* Wetter-Box mit Glassmorphism */
         #weather-box {
-            position: absolute; top: 40px; left: 40px; z-index: 10;
-            background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.2);
-            color: white; min-width: 200px;
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 10;
+            min-width: 260px;
+            padding: 18px 26px 20px;
+            border-radius: 22px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow:
+                0 18px 45px rgba(0, 0, 0, 0.55),
+                0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+            color: var(--text-light);
         }
 
-        /* News Ticker */
+        #weather-location {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--allianz-gold);
+            margin-bottom: 6px;
+        }
+
+        #weather-main {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 4px;
+        }
+
+        #temp {
+            font-size: 2.7rem;
+            font-weight: 600;
+        }
+
+        #weather-emoji {
+            font-size: 3.2rem;
+            line-height: 1;
+        }
+
+        #desc {
+            margin-top: 10px;
+            font-size: 1.3rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            opacity: 0.95;
+        }
+
+        /* News-Ticker mit Glassmorphism */
         #ticker-container {
-            position: absolute; bottom: 40px; left: 5%; width: 90%; height: 80px; z-index: 10;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-radius: 40px; display: flex; align-items: center; overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
+            position: fixed;
+            left: 5%;
+            bottom: 32px;
+            width: 90%;
+            height: 80px;
+            z-index: 10;
+            display: flex;
+            align-items: stretch;
+            border-radius: 999px;
+            overflow: hidden;
+            background:
+                linear-gradient(120deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 30, 0.7));
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid var(--glass-border);
+            box-shadow:
+                0 14px 40px rgba(0, 0, 0, 0.7),
+                0 0 0 1px rgba(255, 255, 255, 0.02) inset;
         }
 
-        #ticker-label { 
-            background: var(--allianz-gold); color: white; 
-            padding: 0 30px; height: 100%; display: flex; 
-            align-items: center; font-weight: bold; font-size: 24px; 
+        #ticker-label {
+            background: linear-gradient(135deg, var(--allianz-gold), #e5c552);
+            color: #11131f;
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            box-shadow: 8px 0 18px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
         }
 
-        #ticker-wrap { flex: 1; overflow: hidden; }
-        .ticker-move { 
-            display: inline-block; white-space: nowrap; padding-left: 100%; 
-            font-size: 28px; color: white; 
-            animation: ticker-animation 50s linear infinite; 
+        #ticker-wrap {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
         }
 
-        @keyframes ticker-animation { 0% { transform: translateX(0); } 100% { transform: translateX(-250%); } }
+        #ticker-content {
+            position: absolute;
+            white-space: nowrap;
+            padding-left: 100%;
+            font-size: 1.4rem;
+            color: #ffffff;
+            animation: ticker-scroll 45s linear infinite;
+        }
 
-        #clock { 
-            position: absolute; top: 250px; left: 60px; z-index: 10; 
-            color: white; font-size: 60px; font-weight: 200;
-            text-shadow: 0 4px 15px rgba(0,0,0,0.7); 
+        @keyframes ticker-scroll {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        @media (max-width: 900px) {
+            #logo {
+                width: 230px;
+                top: 24px;
+                right: 24px;
+            }
+
+            #weather-box {
+                top: 24px;
+                left: 24px;
+            }
+
+            #ticker-container {
+                left: 4%;
+                width: 92%;
+                height: 72px;
+            }
+
+            #ticker-content {
+                font-size: 1.1rem;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div id="slideshow"></div>
-    <img src="logo.png" id="logo">
-    <div id="clock"></div>
-
-    <div id="weather-box">
-        <div style="font-size: 1.2em; color: var(--allianz-gold); font-weight: bold; margin-bottom: 5px;">Bad Honnef</div>
-        <div id="temp" style="font-size: 2.5em; font-weight: bold;">--°C</div>
-        <div id="desc" style="font-size: 1.1em; opacity: 0.8;">Lade Wetter...</div>
+    <!-- Hintergrund-Slideshow -->
+    <div id="slideshow">
+        <div class="slide active kenburns" id="slideA"></div>
+        <div class="slide" id="slideB"></div>
     </div>
 
+    <!-- Allianz Logo (immer oben rechts) -->
+    <img src="logo.png" id="logo" alt="Allianz Senk Bad Honnef Logo">
+
+    <!-- Wetter-Widget mit integrierter Uhrzeit -->
+    <div id="weather-box">
+        <div id="weather-location">Bad Honnef</div>
+        <div id="weather-main">
+            <div id="weather-emoji">⛅</div>
+            <div id="temp">--°C</div>
+        </div>
+        <div id="desc">--:--</div>
+    </div>
+
+    <!-- News-Ticker -->
     <div id="ticker-container">
         <div id="ticker-label">AKTUELL</div>
         <div id="ticker-wrap">
-            <div class="ticker-move" id="ticker-content">+++ Willkommen bei Allianz Senk Bad Honnef +++ Ihr Partner für Versicherung und Vorsorge +++ Wir wünschen eine schöne Karnevalszeit! +++ Alaaf aus Bad Honnef +++</div>
+            <div id="ticker-content">
+                +++ Willkommen bei Allianz Senk Bad Honnef +++ Ihr Partner für Versicherungen und Vorsorge +++
+                Wir wünschen eine schöne Karnevalszeit! +++ Alaaf aus Bad Honnef +++
+            </div>
         </div>
     </div>
 
     <script>
-        // 1. FOTOS - Dynamische URL-Erzeugung
-        const totalImages = 14;
-        let currentImg = 1;
-        const slideElement = document.getElementById('slideshow');
+        (function () {
+            "use strict";
 
-        function nextSlide() {
-            // WICHTIG: Die exakte Schreibweise inkl. Leerzeichen
-            const fileName = `karneval26 (${currentImg}).jpg`;
-            // Browser brauchen für Leerzeichen in URLs %20
-            const urlSafeName = fileName.replace(/ /g, '%20'); 
-            
-            const img = new Image();
-            img.src = urlSafeName;
-            img.onload = () => {
-                slideElement.style.backgroundImage = `url('${urlSafeName}')`;
-            };
-            img.onerror = () => {
-                console.error("Bild nicht gefunden:", urlSafeName);
-            };
+            /* ----------------------------------------
+             * 1. Vollbild-Bilderslideshow (Ken Burns)
+             * ---------------------------------------- */
+            const totalImages = 97;
+            const slideIntervalMs = 8000;
 
-            currentImg = (currentImg % totalImages) + 1;
-        }
-        
-        setInterval(nextSlide, 8000); 
-        nextSlide();
+            const slideA = document.getElementById("slideA");
+            const slideB = document.getElementById("slideB");
+            const slides = [slideA, slideB];
 
-        // 2. UHRZEIT
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
-        }, 1000);
+            let currentIndex = 1;
+            let activeSlideIndex = 0;
 
-        // 3. WETTER (Simpel & Stabil über eine offene API)
-        async function updateWeather() {
-            try {
-                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=50.6444&longitude=7.2274&current_weather=true');
-                const data = await res.json();
-                document.getElementById('temp').innerText = Math.round(data.current_weather.temperature) + "°C";
-                document.getElementById('desc').innerText = "In Bad Honnef";
-            } catch (e) {
-                document.getElementById('desc').innerText = "Wetter aktuell nicht verfügbar";
+            function getImageUrl(index) {
+                const folder = "Allianz Senk \u2013 Karneval 2026";
+                const fileName = "karneval26 (" + index + ").jpg";
+                // Ordnername und Dateiname sauber als URL encodieren
+                const rawPath = folder + "/" + fileName;
+                return encodeURI(rawPath);
             }
-        }
-        updateWeather();
-        setInterval(updateWeather, 1800000);
 
-        // 4. NEWS (Fallback-Sicherheit)
-        async function updateNews() {
-            try {
-                const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.tagesschau.de/infosrv/rss/all/');
-                const data = await res.json();
-                if(data.items) {
-                    document.getElementById('ticker-content').innerText = data.items.map(i => i.title).join("  +++  ") + " +++ ";
+            function preloadImage(url) {
+                return new Promise(function (resolve, reject) {
+                    const img = new Image();
+                    img.onload = function () { resolve(url); };
+                    img.onerror = function (err) { reject(err || new Error("Bild konnte nicht geladen werden: " + url)); };
+                    img.src = url;
+                });
+            }
+
+            function showNextSlide() {
+                const nextIndex = currentIndex % totalImages + 1;
+                const incomingSlideIndex = 1 - activeSlideIndex;
+                const activeSlide = slides[activeSlideIndex];
+                const incomingSlide = slides[incomingSlideIndex];
+
+                const url = getImageUrl(currentIndex);
+
+                preloadImage(url).then(function (loadedUrl) {
+                    incomingSlide.style.backgroundImage = "url('" + loadedUrl + "')";
+
+                    // Ken-Burns-Animation für neue Slide zurücksetzen und neu starten
+                    activeSlide.classList.remove("kenburns");
+                    incomingSlide.classList.remove("kenburns");
+
+                    // Forciere Reflow, damit die Animation zuverlässig neu startet
+                    void incomingSlide.offsetWidth;
+
+                    activeSlide.classList.remove("active");
+                    incomingSlide.classList.add("active", "kenburns");
+
+                    activeSlideIndex = incomingSlideIndex;
+                    currentIndex = nextIndex;
+                }).catch(function (err) {
+                    console.error(err);
+                    // Im Fehlerfall Bildindex trotzdem weiterdrehen
+                    currentIndex = nextIndex;
+                });
+            }
+
+            // Initiales Bild setzen
+            (function initSlideshow() {
+                const initialUrl = getImageUrl(currentIndex);
+                preloadImage(initialUrl).then(function (loadedUrl) {
+                    slideA.style.backgroundImage = "url('" + loadedUrl + "')";
+                }).catch(function (err) {
+                    console.error("Initiales Bild konnte nicht geladen werden:", err);
+                });
+                setInterval(showNextSlide, slideIntervalMs);
+            })();
+
+            /* ----------------------
+             * 2. Uhrzeit (in Wetter-Box)
+             * ---------------------- */
+            function updateClock() {
+                const now = new Date();
+                const options = { hour: "2-digit", minute: "2-digit" };
+                var clockEl = document.getElementById("desc");
+                if (clockEl) {
+                    clockEl.innerText = now.toLocaleTimeString("de-DE", options);
                 }
-            } catch (e) {
-                console.log("Nutze Allianz-Standard-Ticker");
             }
-        }
-        updateNews();
+
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            /* --------------------------
+             * 3. Live-Wetter (Open-Meteo)
+             * -------------------------- */
+            const weatherUrl =
+                "https://api.open-meteo.com/v1/forecast?latitude=50.6444&longitude=7.2274&current_weather=true";
+
+            function mapWeatherCodeToEmojiAndText(code) {
+                // Mapping gemäß Open-Meteo Wettercodes
+                if (code === 0) return { emoji: "☀️", text: "Klarer Himmel" };
+                if (code === 1) return { emoji: "🌤️", text: "Überwiegend klar" };
+                if (code === 2) return { emoji: "⛅", text: "Teilweise bewölkt" };
+                if (code === 3) return { emoji: "☁️", text: "Bewölkt" };
+                if (code === 45 || code === 48) return { emoji: "🌫️", text: "Nebel" };
+                if (code === 51 || code === 53 || code === 55) return { emoji: "🌦️", text: "Nieselregen" };
+                if (code === 61 || code === 63 || code === 65) return { emoji: "🌧️", text: "Regen" };
+                if (code === 66 || code === 67) return { emoji: "🌧️", text: "Gefrierender Regen" };
+                if (code === 71 || code === 73 || code === 75 || code === 77) return { emoji: "❄️", text: "Schnee" };
+                if (code === 80 || code === 81 || code === 82) return { emoji: "🌧️", text: "Regenschauer" };
+                if (code === 85 || code === 86) return { emoji: "🌨️", text: "Schneeschauer" };
+                if (code === 95) return { emoji: "⛈️", text: "Gewitter" };
+                if (code === 96 || code === 99) return { emoji: "⛈️", text: "Gewitter mit Hagel" };
+                return { emoji: "ℹ️", text: "Wetterdaten" };
+            }
+
+            function updateWeather() {
+                fetch(weatherUrl)
+                    .then(function (res) {
+                        if (!res.ok) {
+                            throw new Error("Wetter-HTTP-Fehler: " + res.status);
+                        }
+                        return res.json();
+                    })
+                    .then(function (data) {
+                        console.log("Wetter-Daten:", data);
+                        if (!data || !data.current_weather) {
+                            throw new Error("Wetterdaten unvollständig");
+                        }
+                        const temp = Math.round(data.current_weather.temperature);
+                        const code = data.current_weather.weathercode;
+                        const mapped = mapWeatherCodeToEmojiAndText(code);
+
+                        document.getElementById("temp").innerText = temp + "°C";
+                        document.getElementById("weather-emoji").innerText = mapped.emoji;
+                    })
+                    .catch(function (err) {
+                        console.error("Fehler beim Abrufen der Wetterdaten:", err);
+                    });
+            }
+
+            updateWeather();
+            // Alle 30 Minuten aktualisieren
+            setInterval(updateWeather, 30 * 60 * 1000);
+
+            /* --------------------------
+             * 4. News-Ticker (Tagesschau)
+             * -------------------------- */
+            const fallbackMessages = [
+                "Willkommen bei Allianz Senk Bad Honnef",
+                "Ihr Partner für Versicherungen und Vorsorge",
+                "Wir wünschen eine schöne Karnevalszeit!",
+                "Alaaf aus Bad Honnef"
+            ];
+
+            function setTickerFromArray(arr) {
+                const text =
+                    "+++ " + arr.join(" +++ ") + " +++ ";
+                const ticker = document.getElementById("ticker-content");
+                ticker.textContent = text;
+                // Animation neu starten (wichtig nach Textänderung)
+                ticker.style.animation = "none";
+                // Forciere Reflow
+                void ticker.offsetWidth;
+                ticker.style.animation = "";
+            }
+
+            function updateNews() {
+                var apiUrl = "https://api.rss2json.com/v1/api.json?rss_url=https://www.tagesschau.de/infosrv/rss/all/";
+
+                fetch(apiUrl)
+                    .then(function (res) {
+                        if (!res.ok) {
+                            throw new Error("News-HTTP-Fehler: " + res.status);
+                        }
+                        return res.json();
+                    })
+                    .then(function (data) {
+                        if (!data || !data.items) {
+                            throw new Error("News-Antwort ohne items");
+                        }
+                        var titles = data.items.map(function (i) {
+                            return i.title ? i.title.trim() : "";
+                        }).filter(function (t) { return t.length > 0; });
+                        if (titles.length === 0) {
+                            throw new Error("Keine gültigen News-Titel");
+                        }
+                        setTickerFromArray(titles);
+                    })
+                    .catch(function (e) {
+                        console.error("News-Fehler:", e);
+                        setTickerFromArray(fallbackMessages);
+                    });
+            }
+
+            updateNews();
+            // Alle 30 Minuten erneut versuchen
+            setInterval(updateNews, 30 * 60 * 1000);
+        })();
     </script>
 </body>
 </html>
