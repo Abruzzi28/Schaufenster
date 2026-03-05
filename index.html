@@ -2,48 +2,72 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Allianz Senk Bad Honnef</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allianz Senk Schaufenster</title>
     <style>
         :root {
             --allianz-gold: #a3890e;
             --koenigsblau: #003781;
-            --glass: rgba(255, 255, 255, 0.2);
+            --glass: rgba(255, 255, 255, 0.15);
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: sans-serif; background-color: #001a3d; }
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%; 
+            overflow: hidden; background-color: #001a3d; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-        /* Hintergrund-Diashow */
+        /* Hintergrund-Bilder */
         #slideshow {
             position: fixed; width: 100%; height: 100%;
             background-size: cover; background-position: center;
             background-repeat: no-repeat;
-            transition: background-image 1s ease-in-out;
+            transition: background-image 1.5s ease-in-out;
             z-index: 1;
         }
 
-        #logo { position: absolute; top: 40px; right: 40px; width: 350px; z-index: 100; }
+        #logo { 
+            position: absolute; top: 40px; right: 40px; 
+            width: 350px; z-index: 100; 
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+        }
 
-        /* Wetter Box - Neuer Versuch via einfachem Image-Widget */
-        #weather-container {
+        /* Wetter Box */
+        #weather-box {
             position: absolute; top: 40px; left: 40px; z-index: 10;
             background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.2);
+            color: white; min-width: 200px;
         }
 
         /* News Ticker */
         #ticker-container {
             position: absolute; bottom: 40px; left: 5%; width: 90%; height: 80px; z-index: 10;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-radius: 40px; display: flex; align-items: center; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        #ticker-label { background: var(--allianz-gold); color: white; padding: 0 30px; height: 100%; display: flex; align-items: center; font-weight: bold; font-size: 22px; }
+        #ticker-label { 
+            background: var(--allianz-gold); color: white; 
+            padding: 0 30px; height: 100%; display: flex; 
+            align-items: center; font-weight: bold; font-size: 24px; 
+        }
+
         #ticker-wrap { flex: 1; overflow: hidden; }
-        .ticker-move { display: inline-block; white-space: nowrap; padding-left: 100%; font-size: 28px; color: white; animation: ticker-animation 60s linear infinite; }
+        .ticker-move { 
+            display: inline-block; white-space: nowrap; padding-left: 100%; 
+            font-size: 28px; color: white; 
+            animation: ticker-animation 50s linear infinite; 
+        }
 
-        @keyframes ticker-animation { 0% { transform: translateX(0); } 100% { transform: translateX(-200%); } }
+        @keyframes ticker-animation { 0% { transform: translateX(0); } 100% { transform: translateX(-250%); } }
 
-        #clock { position: absolute; top: 320px; left: 60px; z-index: 10; color: white; font-size: 50px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+        #clock { 
+            position: absolute; top: 250px; left: 60px; z-index: 10; 
+            color: white; font-size: 60px; font-weight: 200;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.7); 
+        }
     </style>
 </head>
 <body>
@@ -52,37 +76,41 @@
     <img src="logo.png" id="logo">
     <div id="clock"></div>
 
-    <div id="weather-container">
-        <a href="https://www.wetter.de/deutschland/wetter-bad-honnef-18220804.html" target="_blank">
-            <img src="https://www.wetter.de/public/static/widgets/wetter-widget-v3/img/logos/wetterde-logo.svg" style="width:100px; display:block; margin-bottom:10px;">
-            <div style="color:white; font-size:20px; font-weight:bold;">Wetter in Bad Honnef</div>
-            <div style="color:white; font-size:16px;">Aktuelle Vorhersage online</div>
-        </a>
+    <div id="weather-box">
+        <div style="font-size: 1.2em; color: var(--allianz-gold); font-weight: bold; margin-bottom: 5px;">Bad Honnef</div>
+        <div id="temp" style="font-size: 2.5em; font-weight: bold;">--°C</div>
+        <div id="desc" style="font-size: 1.1em; opacity: 0.8;">Lade Wetter...</div>
     </div>
 
     <div id="ticker-container">
-        <div id="ticker-label">INFO</div>
+        <div id="ticker-label">AKTUELL</div>
         <div id="ticker-wrap">
-            <div class="ticker-move" id="ticker-content">+++ Willkommen bei Allianz Senk Bad Honnef +++ Wir sind für Sie da +++ Ihre Experten für Versicherung und Vorsorge +++</div>
+            <div class="ticker-move" id="ticker-content">+++ Willkommen bei Allianz Senk Bad Honnef +++ Ihr Partner für Versicherung und Vorsorge +++ Wir wünschen eine schöne Karnevalszeit! +++ Alaaf aus Bad Honnef +++</div>
         </div>
     </div>
 
     <script>
-        // 1. FOTOS REPARATUR
-        // Wir testen zwei Varianten des Namens (mit und ohne Leerzeichen vor der Klammer)
+        // 1. FOTOS - Dynamische URL-Erzeugung
         const totalImages = 14;
         let currentImg = 1;
         const slideElement = document.getElementById('slideshow');
 
         function nextSlide() {
-            // Hier ist die Korrektur für deine Namen: karneval26 (1).jpg
-            const fileName = "karneval26 (" + currentImg + ").jpg";
-            // WICHTIG: Die URL muss absolut oder korrekt encodiert sein
-            slideElement.style.backgroundImage = "url('" + encodeURI(fileName) + "')";
+            // WICHTIG: Die exakte Schreibweise inkl. Leerzeichen
+            const fileName = `karneval26 (${currentImg}).jpg`;
+            // Browser brauchen für Leerzeichen in URLs %20
+            const urlSafeName = fileName.replace(/ /g, '%20'); 
             
-            console.log("Lade Bild:", fileName);
-            currentImg++;
-            if (currentImg > totalImages) currentImg = 1;
+            const img = new Image();
+            img.src = urlSafeName;
+            img.onload = () => {
+                slideElement.style.backgroundImage = `url('${urlSafeName}')`;
+            };
+            img.onerror = () => {
+                console.error("Bild nicht gefunden:", urlSafeName);
+            };
+
+            currentImg = (currentImg % totalImages) + 1;
         }
         
         setInterval(nextSlide, 8000); 
@@ -94,11 +122,33 @@
             document.getElementById('clock').innerText = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
         }, 1000);
 
-        // 3. NEWS TICKER - DIREKT-MODUS
-        // Wenn die automatischen News blockiert werden, nutzen wir diesen festen "Power-Ticker"
-        const fallbackNews = "+++ Allianz Senk Bad Honnef +++ Ihr Vertrauen ist unsere Motivation +++ Besuchen Sie uns in der Hauptstraße +++ Wir wünschen eine schöne Karnevalszeit +++ Alaaf aus Bad Honnef! +++";
-        document.getElementById('ticker-content').innerText = fallbackNews;
+        // 3. WETTER (Simpel & Stabil über eine offene API)
+        async function updateWeather() {
+            try {
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=50.6444&longitude=7.2274&current_weather=true');
+                const data = await res.json();
+                document.getElementById('temp').innerText = Math.round(data.current_weather.temperature) + "°C";
+                document.getElementById('desc').innerText = "In Bad Honnef";
+            } catch (e) {
+                document.getElementById('desc').innerText = "Wetter aktuell nicht verfügbar";
+            }
+        }
+        updateWeather();
+        setInterval(updateWeather, 1800000);
 
+        // 4. NEWS (Fallback-Sicherheit)
+        async function updateNews() {
+            try {
+                const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.tagesschau.de/infosrv/rss/all/');
+                const data = await res.json();
+                if(data.items) {
+                    document.getElementById('ticker-content').innerText = data.items.map(i => i.title).join("  +++  ") + " +++ ";
+                }
+            } catch (e) {
+                console.log("Nutze Allianz-Standard-Ticker");
+            }
+        }
+        updateNews();
     </script>
 </body>
 </html>
