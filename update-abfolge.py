@@ -14,8 +14,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 ABFOLGE_PATH = ROOT / "abfolge.json"
+ABFOLGE_JS_PATH = ROOT / "abfolge.js"
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 SKIP_DIRS = {".git", ".github", ".cursor", "node_modules"}
+PREFERRED_KEYWORDS = ["Karneval", "Teamfotos", "Martinimarkt"]
 
 
 def natural_key(name: str):
@@ -53,24 +55,36 @@ def load_abfolge() -> list[str]:
 
 def main() -> None:
     found = {folder.name: folder for folder in event_folders()}
-    ordered = [name for name in load_abfolge() if name in found]
-    for name in found:
-        if name not in ordered:
+    ordered = []
+    for keyword in PREFERRED_KEYWORDS:
+        for name in found:
+            if keyword.casefold() in name.casefold() and name not in ordered:
+                ordered.append(name)
+    for name in load_abfolge() + list(found):
+        if name in found and name not in ordered:
             ordered.append(name)
 
-    ABFOLGE_PATH.write_text(
-        json.dumps({"ordner": ordered}, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-
+    bilder = {}
     for name in ordered:
-        folder = found[name]
-        images = folder_images(folder)
-        (folder / "bilder.json").write_text(
+        images = folder_images(found[name])
+        bilder[name] = images
+        (found[name] / "bilder.json").write_text(
             json.dumps(images, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
         print(f"{name}: {len(images)} Bilder")
+
+    payload = {"ordner": ordered, "bilder": bilder}
+    ABFOLGE_PATH.write_text(
+        json.dumps({"ordner": ordered}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    ABFOLGE_JS_PATH.write_text(
+        "window.SLIDESHOW_ABFOLGE = "
+        + json.dumps(payload, ensure_ascii=False, indent=2)
+        + ";\n",
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":

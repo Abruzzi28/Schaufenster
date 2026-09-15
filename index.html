@@ -28,30 +28,43 @@
             color: var(--text-light);
         }
 
-        /* Vollbild-Slideshow-Hintergrund mit Ken-Burns-Effekt */
+        /* Vollbild-Slideshow-Hintergrund mit Ken-Burns-Effekt.
+           Opacity und Transform liegen auf getrennten Ebenen:
+           Android-WebView / Fully Kiosk rendert sonst oft schwarz. */
         #slideshow {
             position: fixed;
             inset: 0;
             overflow: hidden;
             z-index: 1;
+            background-color: #000814;
         }
 
         .slide {
             position: absolute;
             inset: 0;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
             opacity: 0;
             transition: opacity 1.8s ease-in-out;
-            transform-origin: center center;
+            overflow: hidden;
+            background-color: #000814;
         }
 
         .slide.active {
             opacity: 1;
         }
 
-        .slide.kenburns {
+        .slide img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            border: 0;
+            transform-origin: center center;
+        }
+
+        .slide.active img.kenburns {
             animation: kenburns 8s ease-in-out forwards;
         }
 
@@ -219,8 +232,8 @@
 
     <!-- Hintergrund-Slideshow -->
     <div id="slideshow">
-        <div class="slide active kenburns" id="slideA"></div>
-        <div class="slide" id="slideB"></div>
+        <div class="slide active" id="slideA"><img id="imgA" alt=""></div>
+        <div class="slide" id="slideB"><img id="imgB" alt=""></div>
     </div>
 
     <!-- Allianz Logo (immer oben rechts) -->
@@ -247,6 +260,7 @@
         </div>
     </div>
 
+    <script src="abfolge.js"></script>
     <script>
         (function () {
             "use strict";
@@ -255,38 +269,38 @@
              * 1. Vollbild-Bilderslideshow (Ken Burns)
              *
              * Ein Event = ein Ordner. Alle Ordner laufen in
-             * einem Band, in der Reihenfolge aus abfolge.json.
-             * Innerhalb eines Ordners gelten die Dateinamen.
-             *
-             * Neues Event: Ordner anlegen, Fotos hineinlegen,
-             * Ordnernamen in abfolge.json eintragen (oder das
-             * Skript update-abfolge.py ausführen).
+             * einem Band: Karneval, Teamfotos, Martinimarkt.
+             * Die Liste steht in abfolge.js (kein fetch nötig,
+             * damit Fully Kiosk die Fotos zuverlässig zeigt).
              * ---------------------------------------- */
             const slideIntervalMs = 8000;
-            const maxScanIndex = 500;
-            const stopAfterMissing = 12;
-            const numberedNamePatterns = [
-                function (index) { return "karneval26 (" + index + ").jpg"; },
-                function (index) { return "foto (" + index + ").jpg"; },
-                function (index) { return "image (" + index + ").jpg"; },
-                function (index) { return "(" + index + ").jpg"; },
-                function (index) { return index + ".jpg"; }
-            ];
-
             const slideA = document.getElementById("slideA");
             const slideB = document.getElementById("slideB");
+            const imgA = document.getElementById("imgA");
+            const imgB = document.getElementById("imgB");
             const slides = [slideA, slideB];
+            const slideImgs = [imgA, imgB];
 
             let imageUrls = [];
             let currentIndex = 0;
             let activeSlideIndex = 0;
 
-            function encodeImagePath(rawPath) {
-                return encodeURI(rawPath);
+            function ensureTrailingSlash() {
+                var path = window.location.pathname;
+                if (path && path.charAt(path.length - 1) !== "/" && !/\.[a-zA-Z0-9]+$/.test(path)) {
+                    window.location.replace(path + "/" + window.location.search + window.location.hash);
+                    return true;
+                }
+                return false;
             }
 
-            function folderImageUrl(folder, fileName) {
-                return encodeImagePath(folder + "/" + fileName);
+            function assetUrl(relativePath) {
+                var encoded = String(relativePath).split("/").map(encodeURIComponent).join("/");
+                try {
+                    return new URL(encoded, document.baseURI).href;
+                } catch (err) {
+                    return encoded;
+                }
             }
 
             function preloadImage(url) {
@@ -298,159 +312,41 @@
                 });
             }
 
-            function imageExists(url) {
-                return fetch(url, { method: "HEAD", cache: "no-store" }).then(function (res) {
-                    if (res.ok) {
-                        return true;
-                    }
-                    if (res.status === 404) {
-                        return false;
-                    }
-                    return preloadImage(url).then(function () {
-                        return true;
-                    }).catch(function () {
-                        return false;
-                    });
-                }).catch(function () {
-                    return preloadImage(url).then(function () {
-                        return true;
-                    }).catch(function () {
-                        return false;
-                    });
-                });
-            }
-
-            function discoverNumberedImages(folder, fileName) {
-                var found = [];
-                var index = 1;
-                var missingStreak = 0;
-                var batchSize = 10;
-
-                function nextBatch() {
-                    if (index > maxScanIndex || missingStreak >= stopAfterMissing) {
-                        return Promise.resolve(found);
-                    }
-
-                    var batch = [];
-                    var batchIndexes = [];
-                    var i;
-                    for (i = 0; i < batchSize && index + i <= maxScanIndex; i++) {
-                        batchIndexes.push(index + i);
-                        batch.push(imageExists(folderImageUrl(folder, fileName(index + i))));
-                    }
-                    index += i;
-
-                    return Promise.all(batch).then(function (results) {
-                        var j;
-                        for (j = 0; j < results.length; j++) {
-                            if (missingStreak >= stopAfterMissing) {
-                                break;
-                            }
-                            if (results[j]) {
-                                found.push(folderImageUrl(folder, fileName(batchIndexes[j])));
-                                missingStreak = 0;
-                            } else {
-                                missingStreak += 1;
-                            }
-                        }
-                        return nextBatch();
-                    });
+            function playlistFromEmbedded() {
+                var data = window.SLIDESHOW_ABFOLGE;
+                if (!data || !Array.isArray(data.ordner) || data.ordner.length === 0) {
+                    return null;
                 }
-
-                return nextBatch();
-            }
-
-            function detectNumberedPattern(folder) {
-                var i = 0;
-
-                function tryNext() {
-                    if (i >= numberedNamePatterns.length) {
-                        return Promise.resolve(null);
-                    }
-                    var pattern = numberedNamePatterns[i];
-                    i += 1;
-                    return imageExists(folderImageUrl(folder, pattern(1))).then(function (ok) {
-                        if (ok) {
-                            return pattern;
-                        }
-                        return tryNext();
+                var urls = [];
+                data.ordner.forEach(function (folder) {
+                    var names = (data.bilder && data.bilder[folder]) || [];
+                    names.forEach(function (name) {
+                        urls.push(assetUrl(folder + "/" + name));
                     });
-                }
-
-                return tryNext();
-            }
-
-            function loadFolderFromManifest(folder) {
-                return fetch(encodeImagePath(folder + "/bilder.json"), { cache: "no-store" }).then(function (res) {
-                    if (!res.ok) {
-                        throw new Error("Keine bilder.json in " + folder);
-                    }
-                    return res.json();
-                }).then(function (names) {
-                    if (!Array.isArray(names)) {
-                        return [];
-                    }
-                    return names.filter(function (name) {
-                        return typeof name === "string" && name.length > 0;
-                    }).map(function (name) {
-                        return folderImageUrl(folder, name);
-                    });
+                    console.log("Slideshow-Ordner \"" + folder + "\": " + names.length + " Bilder");
                 });
-            }
-
-            function loadFolderImages(folder) {
-                return loadFolderFromManifest(folder).catch(function () {
-                    return detectNumberedPattern(folder).then(function (pattern) {
-                        if (!pattern) {
-                            return [];
-                        }
-                        return discoverNumberedImages(folder, pattern);
-                    });
-                });
-            }
-
-            function loadPlaylist() {
-                return fetch("abfolge.json", { cache: "no-store" }).then(function (res) {
-                    if (!res.ok) {
-                        throw new Error("abfolge.json fehlt");
-                    }
-                    return res.json();
-                }).then(function (data) {
-                    var folders = Array.isArray(data) ? data : (data && data.ordner);
-                    if (!Array.isArray(folders) || folders.length === 0) {
-                        return { folders: [], urls: [] };
-                    }
-
-                    var chain = Promise.resolve([]);
-                    folders.forEach(function (folder) {
-                        chain = chain.then(function (all) {
-                            return loadFolderImages(folder).then(function (urls) {
-                                console.log("Slideshow-Ordner \"" + folder + "\": " + urls.length + " Bilder");
-                                return all.concat(urls);
-                            });
-                        });
-                    });
-
-                    return chain.then(function (urls) {
-                        return { folders: folders, urls: urls };
-                    });
-                });
+                return { folders: data.ordner, urls: urls };
             }
 
             function showUrlOnIncomingSlide(url) {
                 const incomingSlideIndex = 1 - activeSlideIndex;
                 const activeSlide = slides[activeSlideIndex];
                 const incomingSlide = slides[incomingSlideIndex];
+                const activeImg = slideImgs[activeSlideIndex];
+                const incomingImg = slideImgs[incomingSlideIndex];
 
                 return preloadImage(url).then(function (loadedUrl) {
-                    incomingSlide.style.backgroundImage = "url('" + loadedUrl + "')";
+                    incomingImg.src = loadedUrl;
 
-                    activeSlide.classList.remove("kenburns");
-                    incomingSlide.classList.remove("kenburns");
-                    void incomingSlide.offsetWidth;
+                    if (activeImg) {
+                        activeImg.classList.remove("kenburns");
+                    }
+                    incomingImg.classList.remove("kenburns");
+                    void incomingImg.offsetWidth;
 
                     activeSlide.classList.remove("active");
-                    incomingSlide.classList.add("active", "kenburns");
+                    incomingSlide.classList.add("active");
+                    incomingImg.classList.add("kenburns");
 
                     activeSlideIndex = incomingSlideIndex;
                 });
@@ -473,30 +369,32 @@
             }
 
             (function initSlideshow() {
-                loadPlaylist().then(function (playlist) {
-                    if (!playlist.urls || playlist.urls.length === 0) {
-                        console.error("Keine Slideshow-Bilder gefunden.");
-                        return;
-                    }
+                if (ensureTrailingSlash()) {
+                    return;
+                }
 
-                    imageUrls = playlist.urls;
-                    currentIndex = 0;
-                    document.body.setAttribute("data-slideshow-count", String(imageUrls.length));
-                    document.body.setAttribute("data-slideshow-folders", playlist.folders.join(" | "));
-                    document.body.setAttribute("data-slideshow-first", decodeURI(imageUrls[0]));
-                    document.body.setAttribute("data-slideshow-last", decodeURI(imageUrls[imageUrls.length - 1]));
-                    console.log("Slideshow: " + imageUrls.length + " Bilder in " + playlist.folders.length + " Ordnern");
+                var playlist = playlistFromEmbedded();
+                if (!playlist || playlist.urls.length === 0) {
+                    console.error("Keine Slideshow-Bilder gefunden.");
+                    return;
+                }
 
-                    preloadImage(imageUrls[0]).then(function (loadedUrl) {
-                        slideA.style.backgroundImage = "url('" + loadedUrl + "')";
-                    }).catch(function (err) {
-                        console.error("Initiales Bild konnte nicht geladen werden:", err);
-                    });
+                imageUrls = playlist.urls;
+                currentIndex = 0;
+                document.body.setAttribute("data-slideshow-count", String(imageUrls.length));
+                document.body.setAttribute("data-slideshow-folders", playlist.folders.join(" | "));
+                document.body.setAttribute("data-slideshow-first", imageUrls[0]);
+                document.body.setAttribute("data-slideshow-last", imageUrls[imageUrls.length - 1]);
+                console.log("Slideshow: " + imageUrls.length + " Bilder in " + playlist.folders.length + " Ordnern");
 
-                    setInterval(showNextSlide, slideIntervalMs);
+                preloadImage(imageUrls[0]).then(function (loadedUrl) {
+                    imgA.src = loadedUrl;
+                    imgA.classList.add("kenburns");
                 }).catch(function (err) {
-                    console.error("Slideshow konnte die Abfolge nicht laden:", err);
+                    console.error("Initiales Bild konnte nicht geladen werden:", err);
                 });
+
+                setInterval(showNextSlide, slideIntervalMs);
             })();
 
             /* ----------------------
