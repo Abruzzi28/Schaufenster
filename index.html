@@ -28,12 +28,17 @@
             color: var(--text-light);
         }
 
-        /* Vollbild-Slideshow-Hintergrund mit Ken-Burns-Effekt.
-           Opacity und Transform liegen auf getrennten Ebenen:
-           Android-WebView / Fully Kiosk rendert sonst oft schwarz. */
+        /* Vollbild-Slideshow. Kein CSS-inset: Android-WebView / Fully
+           kennt das oft nicht, dann ist die Fläche 0x0 und nur Widgets
+           bleiben sichtbar. Opacity/Transform auf Fully weglassen. */
         #slideshow {
             position: fixed;
-            inset: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             z-index: 1;
             background-color: #000814;
@@ -41,7 +46,12 @@
 
         .slide {
             position: absolute;
-            inset: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             opacity: 0;
             transition: opacity 1.8s ease-in-out;
             overflow: hidden;
@@ -54,18 +64,32 @@
 
         .slide img {
             position: absolute;
-            inset: 0;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
             object-position: center;
             display: block;
             border: 0;
-            transform-origin: center center;
         }
 
         .slide.active img.kenburns {
             animation: kenburns 8s ease-in-out forwards;
+        }
+
+        html.kiosk-simple .slide {
+            opacity: 1;
+            transition: none;
+            visibility: hidden;
+        }
+
+        html.kiosk-simple .slide.active {
+            visibility: visible;
+        }
+
+        html.kiosk-simple .slide img.kenburns {
+            animation: none;
         }
 
         @keyframes kenburns {
@@ -232,7 +256,7 @@
 
     <!-- Hintergrund-Slideshow -->
     <div id="slideshow">
-        <div class="slide active" id="slideA"><img id="imgA" alt=""></div>
+        <div class="slide active" id="slideA"><img id="imgA" alt="" src="Allianz%20Senk%20%E2%80%93%20Karneval%202026/karneval26%20%281%29.jpg"></div>
         <div class="slide" id="slideB"><img id="imgB" alt=""></div>
     </div>
 
@@ -260,122 +284,267 @@
         </div>
     </div>
 
+    <script>
+        /* SLIDESHOW_ABFOLGE_BEGIN */
+        window.SLIDESHOW_ABFOLGE = {
+  "ordner": [
+    "Allianz Senk – Karneval 2026",
+    "Allianz Christopher Senk – Teamfotos",
+    "Allianz Senk - Martinimarkt 2025"
+  ],
+  "bilder": {
+    "Allianz Senk – Karneval 2026": [
+      "karneval26 (1).jpg",
+      "karneval26 (2).jpg",
+      "karneval26 (3).jpg",
+      "karneval26 (4).jpg",
+      "karneval26 (5).jpg",
+      "karneval26 (6).jpg",
+      "karneval26 (7).jpg",
+      "karneval26 (8).jpg",
+      "karneval26 (9).jpg",
+      "karneval26 (10).jpg",
+      "karneval26 (11).jpg",
+      "karneval26 (12).jpg",
+      "karneval26 (13).jpg",
+      "karneval26 (14).jpg",
+      "karneval26 (15).jpg",
+      "karneval26 (16).jpg",
+      "karneval26 (17).jpg",
+      "karneval26 (18).jpg",
+      "karneval26 (19).jpg",
+      "karneval26 (20).jpg",
+      "karneval26 (21).jpg",
+      "karneval26 (22).jpg",
+      "karneval26 (23).jpg",
+      "karneval26 (24).jpg",
+      "karneval26 (25).jpg",
+      "karneval26 (26).jpg",
+      "karneval26 (27).jpg",
+      "karneval26 (28).jpg",
+      "karneval26 (29).jpg",
+      "karneval26 (30).jpg",
+      "karneval26 (31).jpg",
+      "karneval26 (32).jpg",
+      "karneval26 (33).jpg",
+      "karneval26 (34).jpg",
+      "karneval26 (35).jpg",
+      "karneval26 (36).jpg",
+      "karneval26 (37).jpg",
+      "karneval26 (38).jpg",
+      "karneval26 (39).jpg",
+      "karneval26 (40).jpg",
+      "karneval26 (41).jpg",
+      "karneval26 (42).jpg",
+      "karneval26 (43).jpg",
+      "karneval26 (44).jpg",
+      "karneval26 (45).jpg",
+      "karneval26 (46).jpg",
+      "karneval26 (47).jpg",
+      "karneval26 (48).jpg",
+      "karneval26 (49).jpg",
+      "karneval26 (50).jpg",
+      "karneval26 (51).jpg",
+      "karneval26 (52).jpg",
+      "karneval26 (53).jpg",
+      "karneval26 (54).jpg",
+      "karneval26 (55).jpg",
+      "karneval26 (56).jpg",
+      "karneval26 (57).jpg",
+      "karneval26 (58).jpg",
+      "karneval26 (59).jpg",
+      "karneval26 (60).jpg",
+      "karneval26 (61).jpg",
+      "karneval26 (62).jpg",
+      "karneval26 (63).jpg",
+      "karneval26 (64).jpg",
+      "karneval26 (65).jpg",
+      "karneval26 (66).jpg",
+      "karneval26 (67).jpg",
+      "karneval26 (68).jpg",
+      "karneval26 (69).jpg",
+      "karneval26 (70).jpg",
+      "karneval26 (71).jpg",
+      "karneval26 (72).jpg",
+      "karneval26 (73).jpg",
+      "karneval26 (74).jpg",
+      "karneval26 (75).jpg",
+      "karneval26 (76).jpg",
+      "karneval26 (77).jpg",
+      "karneval26 (78).jpg",
+      "karneval26 (79).jpg",
+      "karneval26 (80).jpg",
+      "karneval26 (81).jpg",
+      "karneval26 (82).jpg",
+      "karneval26 (83).jpg",
+      "karneval26 (84).jpg",
+      "karneval26 (85).jpg",
+      "karneval26 (86).jpg",
+      "karneval26 (87).jpg",
+      "karneval26 (88).jpg",
+      "karneval26 (89).jpg",
+      "karneval26 (90).jpg",
+      "karneval26 (91).jpg",
+      "karneval26 (92).jpg",
+      "karneval26 (93).jpg",
+      "karneval26 (94).jpg",
+      "karneval26 (95).jpg",
+      "karneval26 (96).jpg",
+      "karneval26 (97).jpg"
+    ],
+    "Allianz Christopher Senk – Teamfotos": [
+      "1 - VN303097.jpg",
+      "2 - VN303041.jpg",
+      "3 - VN303144.jpg",
+      "4 - VN303183.jpg",
+      "5 - VN303268.jpg",
+      "6 - VN303281.jpg",
+      "7 - VN303332.jpg",
+      "8 - VN303388.jpg",
+      "9 - VN303408.jpg",
+      "10 - VN303454.jpg",
+      "11 - VN303122.jpg",
+      "12 - VN303219.jpg"
+    ],
+    "Allianz Senk - Martinimarkt 2025": [
+      "1 - VN105425.jpg",
+      "2 - VN105440.jpg",
+      "3 - VN105442.jpg",
+      "4 - VN105454.jpg",
+      "5 - VN105473.jpg",
+      "6 - VN105478.jpg",
+      "7 - VN105454.jpg",
+      "7 - VN105481.jpg",
+      "8 - VN105485.jpg",
+      "9 - VN105509.jpg",
+      "10 - VN105510.jpg",
+      "11 - VN105512.jpg",
+      "12 - VN105513.jpg",
+      "13 - VN105519.jpg",
+      "14 - VN105520.jpg",
+      "15 - VN105538.jpg",
+      "16 - VN105542.jpg",
+      "17 - VN105553.jpg",
+      "18 - VN105557.jpg",
+      "19 - VN105564.jpg",
+      "20 - VN105568.jpg",
+      "21 - VN105580.jpg",
+      "22 - VN105535.jpg",
+      "22 - VN105586.jpg",
+      "23 - VN105588.jpg",
+      "24 - VN105593.jpg",
+      "25 - VN105616.jpg",
+      "26 - VN105557.jpg",
+      "26 - VN105622.jpg",
+      "27 - VN105630.jpg",
+      "28 - VN105633.jpg",
+      "29 - VN105637.jpg",
+      "30 - VN105643.jpg",
+      "31 - VN105648.jpg",
+      "32 - VN105441.jpg",
+      "33 - VN105460.jpg",
+      "34 - VN105635.jpg"
+    ]
+  }
+};
+        /* SLIDESHOW_ABFOLGE_END */
+    </script>
     <script src="abfolge.js"></script>
     <script>
         (function () {
             "use strict";
 
             /* ----------------------------------------
-             * 1. Vollbild-Bilderslideshow (Ken Burns)
+             * 1. Vollbild-Bilderslideshow
              *
-             * Ein Event = ein Ordner. Alle Ordner laufen in
-             * einem Band: Karneval, Teamfotos, Martinimarkt.
-             * Die Liste steht in abfolge.js (kein fetch nötig,
-             * damit Fully Kiosk die Fotos zuverlässig zeigt).
+             * Playlist steht inline in SLIDESHOW_ABFOLGE, damit Fully
+             * Kiosk nicht von einem extra JS-File oder Redirect abhängt.
              * ---------------------------------------- */
-            const slideIntervalMs = 8000;
-            const slideA = document.getElementById("slideA");
-            const slideB = document.getElementById("slideB");
-            const imgA = document.getElementById("imgA");
-            const imgB = document.getElementById("imgB");
-            const slides = [slideA, slideB];
-            const slideImgs = [imgA, imgB];
+            var slideIntervalMs = 8000;
+            var kioskSimple = /Android|Fully|Kiosk/i.test(navigator.userAgent || "") || /[?&]kiosk=1(?:&|$)/.test(window.location.search || "");
+            if (kioskSimple) {
+                document.documentElement.className += (document.documentElement.className ? " " : "") + "kiosk-simple";
+            }
 
-            let imageUrls = [];
-            let currentIndex = 0;
-            let activeSlideIndex = 0;
+            var slideA = document.getElementById("slideA");
+            var slideB = document.getElementById("slideB");
+            var imgA = document.getElementById("imgA");
+            var imgB = document.getElementById("imgB");
+            var slides = [slideA, slideB];
+            var slideImgs = [imgA, imgB];
 
-            function ensureTrailingSlash() {
-                var path = window.location.pathname;
-                if (path && path.charAt(path.length - 1) !== "/" && !/\.[a-zA-Z0-9]+$/.test(path)) {
-                    window.location.replace(path + "/" + window.location.search + window.location.hash);
-                    return true;
+            var imageUrls = [];
+            var currentIndex = 0;
+            var activeSlideIndex = 0;
+
+            function pageBase() {
+                var href = String(window.location.href || "").split("#")[0].split("?")[0];
+                if (!href) {
+                    return "";
                 }
-                return false;
+                if (/\.html?$/i.test(href)) {
+                    return href.substring(0, href.lastIndexOf("/") + 1);
+                }
+                if (href.charAt(href.length - 1) !== "/") {
+                    return href + "/";
+                }
+                return href;
             }
 
             function assetUrl(relativePath) {
-                var encoded = String(relativePath).split("/").map(encodeURIComponent).join("/");
-                try {
-                    return new URL(encoded, document.baseURI).href;
-                } catch (err) {
-                    return encoded;
-                }
-            }
-
-            function preloadImage(url) {
-                return new Promise(function (resolve, reject) {
-                    const img = new Image();
-                    img.onload = function () { resolve(url); };
-                    img.onerror = function () { reject(new Error("Bild konnte nicht geladen werden: " + url)); };
-                    img.src = url;
-                });
+                var encoded = String(relativePath).split("/").map(function (part) {
+                    return encodeURIComponent(part);
+                }).join("/");
+                return pageBase() + encoded;
             }
 
             function playlistFromEmbedded() {
                 var data = window.SLIDESHOW_ABFOLGE;
-                if (!data || !Array.isArray(data.ordner) || data.ordner.length === 0) {
+                if (!data || !data.ordner || data.ordner.length === 0) {
                     return null;
                 }
                 var urls = [];
-                data.ordner.forEach(function (folder) {
-                    var names = (data.bilder && data.bilder[folder]) || [];
-                    names.forEach(function (name) {
-                        urls.push(assetUrl(folder + "/" + name));
-                    });
-                    console.log("Slideshow-Ordner \"" + folder + "\": " + names.length + " Bilder");
-                });
+                var i;
+                var j;
+                var folder;
+                var names;
+                for (i = 0; i < data.ordner.length; i++) {
+                    folder = data.ordner[i];
+                    names = (data.bilder && data.bilder[folder]) || [];
+                    for (j = 0; j < names.length; j++) {
+                        urls.push(assetUrl(folder + "/" + names[j]));
+                    }
+                }
                 return { folders: data.ordner, urls: urls };
             }
 
             function showUrlOnIncomingSlide(url) {
-                const incomingSlideIndex = 1 - activeSlideIndex;
-                const activeSlide = slides[activeSlideIndex];
-                const incomingSlide = slides[incomingSlideIndex];
-                const activeImg = slideImgs[activeSlideIndex];
-                const incomingImg = slideImgs[incomingSlideIndex];
-
-                return preloadImage(url).then(function (loadedUrl) {
-                    incomingImg.src = loadedUrl;
-
-                    if (activeImg) {
-                        activeImg.classList.remove("kenburns");
-                    }
-                    incomingImg.classList.remove("kenburns");
-                    void incomingImg.offsetWidth;
-
-                    activeSlide.classList.remove("active");
-                    incomingSlide.classList.add("active");
-                    incomingImg.classList.add("kenburns");
-
-                    activeSlideIndex = incomingSlideIndex;
-                });
+                var incomingSlideIndex = 1 - activeSlideIndex;
+                var incomingSlide = slides[incomingSlideIndex];
+                var incomingImg = slideImgs[incomingSlideIndex];
+                if (!incomingSlide || !incomingImg) {
+                    return;
+                }
+                incomingImg.src = url;
+                slides[activeSlideIndex].className = "slide";
+                incomingSlide.className = "slide active";
+                activeSlideIndex = incomingSlideIndex;
             }
 
             function showNextSlide() {
                 if (imageUrls.length === 0) {
                     return;
                 }
-
-                const nextIndex = (currentIndex + 1) % imageUrls.length;
-                const url = imageUrls[nextIndex];
-
-                showUrlOnIncomingSlide(url).then(function () {
-                    currentIndex = nextIndex;
-                }).catch(function (err) {
-                    console.error(err);
-                    currentIndex = nextIndex;
-                });
+                currentIndex = (currentIndex + 1) % imageUrls.length;
+                showUrlOnIncomingSlide(imageUrls[currentIndex]);
             }
 
             (function initSlideshow() {
-                if (ensureTrailingSlash()) {
-                    return;
-                }
-
                 var playlist = playlistFromEmbedded();
                 if (!playlist || playlist.urls.length === 0) {
-                    console.error("Keine Slideshow-Bilder gefunden.");
+                    if (imgA && !imgA.getAttribute("src")) {
+                        console.error("Keine Slideshow-Bilder gefunden.");
+                    }
                     return;
                 }
 
@@ -385,14 +554,11 @@
                 document.body.setAttribute("data-slideshow-folders", playlist.folders.join(" | "));
                 document.body.setAttribute("data-slideshow-first", imageUrls[0]);
                 document.body.setAttribute("data-slideshow-last", imageUrls[imageUrls.length - 1]);
-                console.log("Slideshow: " + imageUrls.length + " Bilder in " + playlist.folders.length + " Ordnern");
 
-                preloadImage(imageUrls[0]).then(function (loadedUrl) {
-                    imgA.src = loadedUrl;
-                    imgA.classList.add("kenburns");
-                }).catch(function (err) {
-                    console.error("Initiales Bild konnte nicht geladen werden:", err);
-                });
+                imgA.src = imageUrls[0];
+                if (!kioskSimple) {
+                    imgA.className = "kenburns";
+                }
 
                 setInterval(showNextSlide, slideIntervalMs);
             })();

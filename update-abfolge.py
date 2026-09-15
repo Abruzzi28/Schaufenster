@@ -15,9 +15,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 ABFOLGE_PATH = ROOT / "abfolge.json"
 ABFOLGE_JS_PATH = ROOT / "abfolge.js"
+INDEX_PATH = ROOT / "index.html"
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 SKIP_DIRS = {".git", ".github", ".cursor", "node_modules"}
 PREFERRED_KEYWORDS = ["Karneval", "Teamfotos", "Martinimarkt"]
+MARKER_START = "/* SLIDESHOW_ABFOLGE_BEGIN */"
+MARKER_END = "/* SLIDESHOW_ABFOLGE_END */"
 
 
 def natural_key(name: str):
@@ -75,16 +78,26 @@ def main() -> None:
         print(f"{name}: {len(images)} Bilder")
 
     payload = {"ordner": ordered, "bilder": bilder}
+    payload_js = "window.SLIDESHOW_ABFOLGE = " + json.dumps(payload, ensure_ascii=False, indent=2) + ";\n"
     ABFOLGE_PATH.write_text(
         json.dumps({"ordner": ordered}, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    ABFOLGE_JS_PATH.write_text(
-        "window.SLIDESHOW_ABFOLGE = "
-        + json.dumps(payload, ensure_ascii=False, indent=2)
-        + ";\n",
-        encoding="utf-8",
-    )
+    ABFOLGE_JS_PATH.write_text(payload_js, encoding="utf-8")
+
+    html = INDEX_PATH.read_text(encoding="utf-8")
+    start = html.find(MARKER_START)
+    end = html.find(MARKER_END)
+    if start != -1 and end != -1 and end > start:
+        injected = (
+            MARKER_START
+            + "\n        "
+            + payload_js.strip()
+            + "\n        "
+            + MARKER_END
+        )
+        html = html[:start] + injected + html[end + len(MARKER_END):]
+        INDEX_PATH.write_text(html, encoding="utf-8")
 
 
 if __name__ == "__main__":
