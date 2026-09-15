@@ -684,13 +684,12 @@
             setInterval(updateWeather, 30 * 60 * 1000);
 
             /* --------------------------
-             * 4. News-Ticker (Tagesschau)
+             * 4. News-Ticker
              * -------------------------- */
-            const fallbackMessages = [
+            const tickerMessages = [
                 "Willkommen bei Allianz Senk Bad Honnef",
                 "Ihr Partner für Versicherungen und Vorsorge",
-                "Wir wünschen eine schöne Karnevalszeit!",
-                "Alaaf aus Bad Honnef"
+                "Wir freuen uns auf Ihren Besuch!"
             ];
 
             function setTickerFromArray(arr) {
@@ -698,44 +697,12 @@
                     "+++ " + arr.join(" +++ ") + " +++ ";
                 const ticker = document.getElementById("ticker-content");
                 ticker.textContent = text;
-                // Animation neu starten (wichtig nach Textänderung)
                 ticker.style.animation = "none";
-                // Forciere Reflow
                 void ticker.offsetWidth;
                 ticker.style.animation = "";
             }
 
-            function updateNews() {
-                var apiUrl = "https://api.rss2json.com/v1/api.json?rss_url=https://www.tagesschau.de/infosrv/rss/all/";
-
-                fetch(apiUrl)
-                    .then(function (res) {
-                        if (!res.ok) {
-                            throw new Error("News-HTTP-Fehler: " + res.status);
-                        }
-                        return res.json();
-                    })
-                    .then(function (data) {
-                        if (!data || !data.items) {
-                            throw new Error("News-Antwort ohne items");
-                        }
-                        var titles = data.items.map(function (i) {
-                            return i.title ? i.title.trim() : "";
-                        }).filter(function (t) { return t.length > 0; });
-                        if (titles.length === 0) {
-                            throw new Error("Keine gültigen News-Titel");
-                        }
-                        setTickerFromArray(titles);
-                    })
-                    .catch(function (e) {
-                        console.error("News-Fehler:", e);
-                        setTickerFromArray(fallbackMessages);
-                    });
-            }
-
-            updateNews();
-            // Alle 30 Minuten erneut versuchen
-            setInterval(updateNews, 30 * 60 * 1000);
+            setTickerFromArray(tickerMessages);
         })();
     </script>
 </body>
