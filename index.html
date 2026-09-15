@@ -476,6 +476,7 @@
             var imageUrls = [];
             var currentIndex = 0;
             var activeSlideIndex = 0;
+            var loadGeneration = 0;
 
             function pageBase() {
                 var href = String(window.location.href || "").split("#")[0].split("?")[0];
@@ -522,13 +523,40 @@
                 var incomingSlideIndex = 1 - activeSlideIndex;
                 var incomingSlide = slides[incomingSlideIndex];
                 var incomingImg = slideImgs[incomingSlideIndex];
+                var generation;
                 if (!incomingSlide || !incomingImg) {
                     return;
                 }
+
+                generation = ++loadGeneration;
+
+                function activate() {
+                    if (generation !== loadGeneration) {
+                        return;
+                    }
+                    incomingImg.onload = null;
+                    incomingImg.onerror = null;
+                    if (!incomingImg.naturalWidth) {
+                        return;
+                    }
+                    slides[activeSlideIndex].className = "slide";
+                    incomingSlide.className = "slide active";
+                    if (!kioskSimple) {
+                        slideImgs[activeSlideIndex].className = "";
+                        incomingImg.className = "kenburns";
+                    }
+                    activeSlideIndex = incomingSlideIndex;
+                }
+
+                incomingImg.onload = activate;
+                incomingImg.onerror = function () {
+                    incomingImg.onload = null;
+                    incomingImg.onerror = null;
+                };
                 incomingImg.src = url;
-                slides[activeSlideIndex].className = "slide";
-                incomingSlide.className = "slide active";
-                activeSlideIndex = incomingSlideIndex;
+                if (incomingImg.complete) {
+                    activate();
+                }
             }
 
             function showNextSlide() {
