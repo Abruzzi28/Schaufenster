@@ -30,7 +30,7 @@
 
         /* Vollbild-Slideshow. Kein CSS-inset: Android-WebView / Fully
            kennt das oft nicht, dann ist die Fläche 0x0 und nur Widgets
-           bleiben sichtbar. Opacity/Transform auf Fully weglassen. */
+           bleiben sichtbar. Zoom nur auf dem Foto, nicht auf dem Slide. */
         #slideshow {
             position: fixed;
             top: 0;
@@ -62,6 +62,8 @@
             opacity: 1;
         }
 
+        /* Zoom liegt nur auf dem img, der Slide selbst fadet/wechselt.
+           So bleibt der Ken-Burns-Effekt ohne das alte Zwischenfoto. */
         .slide img {
             position: absolute;
             top: 0;
@@ -72,10 +74,15 @@
             object-position: center;
             display: block;
             border: 0;
+            transform: scale(1);
+            -webkit-transform: scale(1);
+            transform-origin: center center;
+            -webkit-transform-origin: center center;
         }
 
         .slide.active img.kenburns {
             animation: kenburns 8s ease-in-out forwards;
+            -webkit-animation: kenburns 8s ease-in-out forwards;
         }
 
         html.kiosk-simple .slide {
@@ -88,15 +95,24 @@
             visibility: visible;
         }
 
-        html.kiosk-simple .slide img.kenburns {
-            animation: none;
-        }
-
         @keyframes kenburns {
             0% {
                 transform: scale(1);
+                -webkit-transform: scale(1);
             }
             100% {
+                transform: scale(1.08);
+                -webkit-transform: scale(1.08);
+            }
+        }
+
+        @-webkit-keyframes kenburns {
+            0% {
+                -webkit-transform: scale(1);
+                transform: scale(1);
+            }
+            100% {
+                -webkit-transform: scale(1.08);
                 transform: scale(1.08);
             }
         }
@@ -519,10 +535,20 @@
                 return { folders: data.ordner, urls: urls };
             }
 
+            function startKenBurns(img) {
+                if (!img) {
+                    return;
+                }
+                img.className = "";
+                void img.offsetWidth;
+                img.className = "kenburns";
+            }
+
             function showUrlOnIncomingSlide(url) {
                 var incomingSlideIndex = 1 - activeSlideIndex;
                 var incomingSlide = slides[incomingSlideIndex];
                 var incomingImg = slideImgs[incomingSlideIndex];
+                var outgoingImg = slideImgs[activeSlideIndex];
                 var generation;
                 if (!incomingSlide || !incomingImg) {
                     return;
@@ -540,11 +566,11 @@
                         return;
                     }
                     slides[activeSlideIndex].className = "slide";
-                    incomingSlide.className = "slide active";
-                    if (!kioskSimple) {
-                        slideImgs[activeSlideIndex].className = "";
-                        incomingImg.className = "kenburns";
+                    if (outgoingImg) {
+                        outgoingImg.className = "";
                     }
+                    incomingSlide.className = "slide active";
+                    startKenBurns(incomingImg);
                     activeSlideIndex = incomingSlideIndex;
                 }
 
@@ -584,9 +610,7 @@
                 document.body.setAttribute("data-slideshow-last", imageUrls[imageUrls.length - 1]);
 
                 imgA.src = imageUrls[0];
-                if (!kioskSimple) {
-                    imgA.className = "kenburns";
-                }
+                startKenBurns(imgA);
 
                 setInterval(showNextSlide, slideIntervalMs);
             })();
