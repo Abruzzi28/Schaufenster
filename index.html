@@ -253,73 +253,214 @@
 
             /* ----------------------------------------
              * 1. Vollbild-Bilderslideshow (Ken Burns)
+             *
+             * Neue Fotos einfach in den Ordner legen und
+             * durchnummerieren: karneval26 (98).jpg usw.
+             * Die Abfolge erkennt vorhandene Dateien selbst.
+             *
+             * Weitere Serien: extra imageSources-Eintrag.
+             * Einzelne Dateien mit anderem Namen: extraImages.
              * ---------------------------------------- */
-            const totalImages = 97;
             const slideIntervalMs = 8000;
+            const maxScanIndex = 500;
+            const stopAfterMissing = 12;
+
+            const imageSources = [
+                {
+                    folder: "Allianz Senk \u2013 Karneval 2026",
+                    fileName: function (index) {
+                        return "karneval26 (" + index + ").jpg";
+                    }
+                }
+                // Weitere Bilder-Serie, z.B.:
+                // {
+                //     folder: "fotos",
+                //     fileName: function (index) {
+                //         return "foto (" + index + ").jpg";
+                //     }
+                // }
+            ];
+
+            const extraImages = [
+                // Einzelne Extra-Dateien, z.B.:
+                // "fotos/teamfoto.jpg"
+            ];
 
             const slideA = document.getElementById("slideA");
             const slideB = document.getElementById("slideB");
             const slides = [slideA, slideB];
 
-            let currentIndex = 1;
+            let imageUrls = [];
+            let currentIndex = 0;
             let activeSlideIndex = 0;
 
-            function getImageUrl(index) {
-                const folder = "Allianz Senk \u2013 Karneval 2026";
-                const fileName = "karneval26 (" + index + ").jpg";
-                // Ordnername und Dateiname sauber als URL encodieren
-                const rawPath = folder + "/" + fileName;
+            function encodeImagePath(rawPath) {
                 return encodeURI(rawPath);
+            }
+
+            function getSourceImageUrl(source, index) {
+                return encodeImagePath(source.folder + "/" + source.fileName(index));
             }
 
             function preloadImage(url) {
                 return new Promise(function (resolve, reject) {
                     const img = new Image();
                     img.onload = function () { resolve(url); };
-                    img.onerror = function (err) { reject(err || new Error("Bild konnte nicht geladen werden: " + url)); };
+                    img.onerror = function () { reject(new Error("Bild konnte nicht geladen werden: " + url)); };
                     img.src = url;
                 });
             }
 
-            function showNextSlide() {
-                const nextIndex = currentIndex % totalImages + 1;
+            function imageExists(url) {
+                return fetch(url, { method: "HEAD", cache: "force-cache" }).then(function (res) {
+                    if (res.ok) {
+                        return true;
+                    }
+                    // Manche Server erlauben kein HEAD – dann volles Bild versuchen
+                    return preloadImage(url).then(function () {
+                        return true;
+                    }).catch(function () {
+                        return false;
+                    });
+                }).catch(function () {
+                    return preloadImage(url).then(function () {
+                        return true;
+                    }).catch(function () {
+                        return false;
+                    });
+                });
+            }
+
+            function discoverSourceImages(source) {
+                var found = [];
+                var index = 1;
+                var missingStreak = 0;
+                var batchSize = 10;
+
+                function nextBatch() {
+                    if (index > maxScanIndex || missingStreak >= stopAfterMissing) {
+                        return Promise.resolve(found);
+                    }
+
+                    var batch = [];
+                    var batchIndexes = [];
+                    var i;
+                    for (i = 0; i < batchSize && index + i <= maxScanIndex; i++) {
+                        batchIndexes.push(index + i);
+                        batch.push(imageExists(getSourceImageUrl(source, index + i)));
+                    }
+                    index += i;
+
+                    return Promise.all(batch).then(function (results) {
+                        var j;
+                        for (j = 0; j < results.length; j++) {
+                            if (missingStreak >= stopAfterMissing) {
+                                break;
+                            }
+                            if (results[j]) {
+                                found.push(getSourceImageUrl(source, batchIndexes[j]));
+                                missingStreak = 0;
+                            } else {
+                                missingStreak += 1;
+                            }
+                        }
+                        return nextBatch();
+                    });
+                }
+
+                return nextBatch();
+            }
+
+            function discoverAllImages() {
+                var chain = Promise.resolve([]);
+                imageSources.forEach(function (source) {
+                    chain = chain.then(function (all) {
+                        return discoverSourceImages(source).then(function (found) {
+                            return all.concat(found);
+                        });
+                    });
+                });
+
+                return chain.then(function (all) {
+                    if (extraImages.length === 0) {
+                        return all;
+                    }
+
+                    return Promise.all(extraImages.map(function (path) {
+                        var url = encodeImagePath(path);
+                        return imageExists(url).then(function (ok) {
+                            return ok ? url : null;
+                        });
+                    })).then(function (extras) {
+                        return all.concat(extras.filter(Boolean));
+                    });
+                });
+            }
+
+            function showUrlOnIncomingSlide(url) {
                 const incomingSlideIndex = 1 - activeSlideIndex;
                 const activeSlide = slides[activeSlideIndex];
                 const incomingSlide = slides[incomingSlideIndex];
 
-                const url = getImageUrl(currentIndex);
-
-                preloadImage(url).then(function (loadedUrl) {
+                return preloadImage(url).then(function (loadedUrl) {
                     incomingSlide.style.backgroundImage = "url('" + loadedUrl + "')";
 
-                    // Ken-Burns-Animation für neue Slide zurücksetzen und neu starten
                     activeSlide.classList.remove("kenburns");
                     incomingSlide.classList.remove("kenburns");
-
-                    // Forciere Reflow, damit die Animation zuverlässig neu startet
                     void incomingSlide.offsetWidth;
 
                     activeSlide.classList.remove("active");
                     incomingSlide.classList.add("active", "kenburns");
 
                     activeSlideIndex = incomingSlideIndex;
+                });
+            }
+
+            function showNextSlide() {
+                if (imageUrls.length === 0) {
+                    return;
+                }
+
+                const nextIndex = (currentIndex + 1) % imageUrls.length;
+                const url = imageUrls[nextIndex];
+
+                showUrlOnIncomingSlide(url).then(function () {
                     currentIndex = nextIndex;
                 }).catch(function (err) {
                     console.error(err);
-                    // Im Fehlerfall Bildindex trotzdem weiterdrehen
                     currentIndex = nextIndex;
                 });
             }
 
-            // Initiales Bild setzen
             (function initSlideshow() {
-                const initialUrl = getImageUrl(currentIndex);
-                preloadImage(initialUrl).then(function (loadedUrl) {
+                var firstUrl = getSourceImageUrl(imageSources[0], 1);
+                imageUrls = [firstUrl];
+                currentIndex = 0;
+
+                preloadImage(firstUrl).then(function (loadedUrl) {
                     slideA.style.backgroundImage = "url('" + loadedUrl + "')";
                 }).catch(function (err) {
                     console.error("Initiales Bild konnte nicht geladen werden:", err);
                 });
+
                 setInterval(showNextSlide, slideIntervalMs);
+
+                discoverAllImages().then(function (found) {
+                    if (found.length === 0) {
+                        console.error("Keine Slideshow-Bilder gefunden.");
+                        return;
+                    }
+
+                    var currentUrl = imageUrls[currentIndex];
+                    var sameIndex = found.indexOf(currentUrl);
+                    imageUrls = found;
+                    if (sameIndex >= 0) {
+                        currentIndex = sameIndex;
+                    }
+                    console.log("Slideshow: " + imageUrls.length + " Bilder gefunden");
+                }).catch(function (err) {
+                    console.error("Slideshow konnte Bilder nicht vollständig erkennen:", err);
+                });
             })();
 
             /* ----------------------
