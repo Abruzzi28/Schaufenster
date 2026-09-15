@@ -1,0 +1,31 @@
+name: Slideshow-Abfolge aktualisieren
+
+on:
+  push:
+    paths-ignore:
+      - "README.md"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: Event-Listen neu bauen
+        run: python3 update-abfolge.py
+      - name: Änderungen übernehmen
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "Keine neuen Event-Fotos."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Slideshow-Abfolge an Event-Ordner anpassen"
+          git push

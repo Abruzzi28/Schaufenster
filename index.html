@@ -254,36 +254,23 @@
             /* ----------------------------------------
              * 1. Vollbild-Bilderslideshow (Ken Burns)
              *
-             * Neue Fotos einfach in den Ordner legen und
-             * durchnummerieren: karneval26 (98).jpg usw.
-             * Die Abfolge erkennt vorhandene Dateien selbst.
+             * Ein Event = ein Ordner. Alle Ordner laufen in
+             * einem Band, in der Reihenfolge aus abfolge.json.
+             * Innerhalb eines Ordners gelten die Dateinamen.
              *
-             * Weitere Serien: extra imageSources-Eintrag.
-             * Einzelne Dateien mit anderem Namen: extraImages.
+             * Neues Event: Ordner anlegen, Fotos hineinlegen,
+             * Ordnernamen in abfolge.json eintragen (oder das
+             * Skript update-abfolge.py ausführen).
              * ---------------------------------------- */
             const slideIntervalMs = 8000;
             const maxScanIndex = 500;
             const stopAfterMissing = 12;
-
-            const imageSources = [
-                {
-                    folder: "Allianz Senk \u2013 Karneval 2026",
-                    fileName: function (index) {
-                        return "karneval26 (" + index + ").jpg";
-                    }
-                }
-                // Weitere Bilder-Serie, z.B.:
-                // {
-                //     folder: "fotos",
-                //     fileName: function (index) {
-                //         return "foto (" + index + ").jpg";
-                //     }
-                // }
-            ];
-
-            const extraImages = [
-                // Einzelne Extra-Dateien, z.B.:
-                // "fotos/teamfoto.jpg"
+            const numberedNamePatterns = [
+                function (index) { return "karneval26 (" + index + ").jpg"; },
+                function (index) { return "foto (" + index + ").jpg"; },
+                function (index) { return "image (" + index + ").jpg"; },
+                function (index) { return "(" + index + ").jpg"; },
+                function (index) { return index + ".jpg"; }
             ];
 
             const slideA = document.getElementById("slideA");
@@ -298,8 +285,8 @@
                 return encodeURI(rawPath);
             }
 
-            function getSourceImageUrl(source, index) {
-                return encodeImagePath(source.folder + "/" + source.fileName(index));
+            function folderImageUrl(folder, fileName) {
+                return encodeImagePath(folder + "/" + fileName);
             }
 
             function preloadImage(url) {
@@ -316,11 +303,9 @@
                     if (res.ok) {
                         return true;
                     }
-                    // Echte Lücke: nicht extra als Bild nachladen
                     if (res.status === 404) {
                         return false;
                     }
-                    // Manche Server erlauben kein HEAD – dann volles Bild versuchen
                     return preloadImage(url).then(function () {
                         return true;
                     }).catch(function () {
@@ -335,7 +320,7 @@
                 });
             }
 
-            function discoverSourceImages(source) {
+            function discoverNumberedImages(folder, fileName) {
                 var found = [];
                 var index = 1;
                 var missingStreak = 0;
@@ -351,7 +336,7 @@
                     var i;
                     for (i = 0; i < batchSize && index + i <= maxScanIndex; i++) {
                         batchIndexes.push(index + i);
-                        batch.push(imageExists(getSourceImageUrl(source, index + i)));
+                        batch.push(imageExists(folderImageUrl(folder, fileName(index + i))));
                     }
                     index += i;
 
@@ -362,7 +347,7 @@
                                 break;
                             }
                             if (results[j]) {
-                                found.push(getSourceImageUrl(source, batchIndexes[j]));
+                                found.push(folderImageUrl(folder, fileName(batchIndexes[j])));
                                 missingStreak = 0;
                             } else {
                                 missingStreak += 1;
@@ -375,28 +360,79 @@
                 return nextBatch();
             }
 
-            function discoverAllImages() {
-                var chain = Promise.resolve([]);
-                imageSources.forEach(function (source) {
-                    chain = chain.then(function (all) {
-                        return discoverSourceImages(source).then(function (found) {
-                            return all.concat(found);
-                        });
+            function detectNumberedPattern(folder) {
+                var i = 0;
+
+                function tryNext() {
+                    if (i >= numberedNamePatterns.length) {
+                        return Promise.resolve(null);
+                    }
+                    var pattern = numberedNamePatterns[i];
+                    i += 1;
+                    return imageExists(folderImageUrl(folder, pattern(1))).then(function (ok) {
+                        if (ok) {
+                            return pattern;
+                        }
+                        return tryNext();
+                    });
+                }
+
+                return tryNext();
+            }
+
+            function loadFolderFromManifest(folder) {
+                return fetch(encodeImagePath(folder + "/bilder.json"), { cache: "no-store" }).then(function (res) {
+                    if (!res.ok) {
+                        throw new Error("Keine bilder.json in " + folder);
+                    }
+                    return res.json();
+                }).then(function (names) {
+                    if (!Array.isArray(names)) {
+                        return [];
+                    }
+                    return names.filter(function (name) {
+                        return typeof name === "string" && name.length > 0;
+                    }).map(function (name) {
+                        return folderImageUrl(folder, name);
                     });
                 });
+            }
 
-                return chain.then(function (all) {
-                    if (extraImages.length === 0) {
-                        return all;
+            function loadFolderImages(folder) {
+                return loadFolderFromManifest(folder).catch(function () {
+                    return detectNumberedPattern(folder).then(function (pattern) {
+                        if (!pattern) {
+                            return [];
+                        }
+                        return discoverNumberedImages(folder, pattern);
+                    });
+                });
+            }
+
+            function loadPlaylist() {
+                return fetch("abfolge.json", { cache: "no-store" }).then(function (res) {
+                    if (!res.ok) {
+                        throw new Error("abfolge.json fehlt");
+                    }
+                    return res.json();
+                }).then(function (data) {
+                    var folders = Array.isArray(data) ? data : (data && data.ordner);
+                    if (!Array.isArray(folders) || folders.length === 0) {
+                        return { folders: [], urls: [] };
                     }
 
-                    return Promise.all(extraImages.map(function (path) {
-                        var url = encodeImagePath(path);
-                        return imageExists(url).then(function (ok) {
-                            return ok ? url : null;
+                    var chain = Promise.resolve([]);
+                    folders.forEach(function (folder) {
+                        chain = chain.then(function (all) {
+                            return loadFolderImages(folder).then(function (urls) {
+                                console.log("Slideshow-Ordner \"" + folder + "\": " + urls.length + " Bilder");
+                                return all.concat(urls);
+                            });
                         });
-                    })).then(function (extras) {
-                        return all.concat(extras.filter(Boolean));
+                    });
+
+                    return chain.then(function (urls) {
+                        return { folders: folders, urls: urls };
                     });
                 });
             }
@@ -437,34 +473,27 @@
             }
 
             (function initSlideshow() {
-                var firstUrl = getSourceImageUrl(imageSources[0], 1);
-                imageUrls = [firstUrl];
-                currentIndex = 0;
-
-                preloadImage(firstUrl).then(function (loadedUrl) {
-                    slideA.style.backgroundImage = "url('" + loadedUrl + "')";
-                }).catch(function (err) {
-                    console.error("Initiales Bild konnte nicht geladen werden:", err);
-                });
-
-                setInterval(showNextSlide, slideIntervalMs);
-
-                discoverAllImages().then(function (found) {
-                    if (found.length === 0) {
+                loadPlaylist().then(function (playlist) {
+                    if (!playlist.urls || playlist.urls.length === 0) {
                         console.error("Keine Slideshow-Bilder gefunden.");
                         return;
                     }
 
-                    var currentUrl = imageUrls[currentIndex];
-                    var sameIndex = found.indexOf(currentUrl);
-                    imageUrls = found;
-                    if (sameIndex >= 0) {
-                        currentIndex = sameIndex;
-                    }
+                    imageUrls = playlist.urls;
+                    currentIndex = 0;
                     document.body.setAttribute("data-slideshow-count", String(imageUrls.length));
-                    console.log("Slideshow: " + imageUrls.length + " Bilder gefunden");
+                    document.body.setAttribute("data-slideshow-folders", playlist.folders.join(" | "));
+                    console.log("Slideshow: " + imageUrls.length + " Bilder in " + playlist.folders.length + " Ordnern");
+
+                    preloadImage(imageUrls[0]).then(function (loadedUrl) {
+                        slideA.style.backgroundImage = "url('" + loadedUrl + "')";
+                    }).catch(function (err) {
+                        console.error("Initiales Bild konnte nicht geladen werden:", err);
+                    });
+
+                    setInterval(showNextSlide, slideIntervalMs);
                 }).catch(function (err) {
-                    console.error("Slideshow konnte Bilder nicht vollständig erkennen:", err);
+                    console.error("Slideshow konnte die Abfolge nicht laden:", err);
                 });
             })();
 
