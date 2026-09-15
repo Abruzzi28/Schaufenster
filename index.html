@@ -483,6 +483,8 @@
                     currentIndex = 0;
                     document.body.setAttribute("data-slideshow-count", String(imageUrls.length));
                     document.body.setAttribute("data-slideshow-folders", playlist.folders.join(" | "));
+                    document.body.setAttribute("data-slideshow-first", decodeURI(imageUrls[0]));
+                    document.body.setAttribute("data-slideshow-last", decodeURI(imageUrls[imageUrls.length - 1]));
                     console.log("Slideshow: " + imageUrls.length + " Bilder in " + playlist.folders.length + " Ordnern");
 
                     preloadImage(imageUrls[0]).then(function (loadedUrl) {
