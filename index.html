@@ -28,30 +28,43 @@
             color: var(--text-light);
         }
 
-        /* Vollbild-Slideshow-Hintergrund mit Ken-Burns-Effekt */
+        /* Vollbild-Slideshow-Hintergrund mit Ken-Burns-Effekt.
+           Opacity und Transform liegen auf getrennten Ebenen:
+           Android-WebView / Fully Kiosk rendert sonst oft schwarz. */
         #slideshow {
             position: fixed;
             inset: 0;
             overflow: hidden;
             z-index: 1;
+            background-color: #000814;
         }
 
         .slide {
             position: absolute;
             inset: 0;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
             opacity: 0;
             transition: opacity 1.8s ease-in-out;
-            transform-origin: center center;
+            overflow: hidden;
+            background-color: #000814;
         }
 
         .slide.active {
             opacity: 1;
         }
 
-        .slide.kenburns {
+        .slide img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            border: 0;
+            transform-origin: center center;
+        }
+
+        .slide.active img.kenburns {
             animation: kenburns 8s ease-in-out forwards;
         }
 
@@ -219,8 +232,8 @@
 
     <!-- Hintergrund-Slideshow -->
     <div id="slideshow">
-        <div class="slide active kenburns" id="slideA"></div>
-        <div class="slide" id="slideB"></div>
+        <div class="slide active" id="slideA"><img id="imgA" alt=""></div>
+        <div class="slide" id="slideB"><img id="imgB" alt=""></div>
     </div>
 
     <!-- Allianz Logo (immer oben rechts) -->
@@ -247,78 +260,140 @@
         </div>
     </div>
 
+    <script src="abfolge.js"></script>
     <script>
         (function () {
             "use strict";
 
             /* ----------------------------------------
              * 1. Vollbild-Bilderslideshow (Ken Burns)
+             *
+             * Ein Event = ein Ordner. Alle Ordner laufen in
+             * einem Band: Karneval, Teamfotos, Martinimarkt.
+             * Die Liste steht in abfolge.js (kein fetch nötig,
+             * damit Fully Kiosk die Fotos zuverlässig zeigt).
              * ---------------------------------------- */
-            const totalImages = 97;
             const slideIntervalMs = 8000;
-
             const slideA = document.getElementById("slideA");
             const slideB = document.getElementById("slideB");
+            const imgA = document.getElementById("imgA");
+            const imgB = document.getElementById("imgB");
             const slides = [slideA, slideB];
+            const slideImgs = [imgA, imgB];
 
-            let currentIndex = 1;
+            let imageUrls = [];
+            let currentIndex = 0;
             let activeSlideIndex = 0;
 
-            function getImageUrl(index) {
-                const folder = "Allianz Senk \u2013 Karneval 2026";
-                const fileName = "karneval26 (" + index + ").jpg";
-                // Ordnername und Dateiname sauber als URL encodieren
-                const rawPath = folder + "/" + fileName;
-                return encodeURI(rawPath);
+            function ensureTrailingSlash() {
+                var path = window.location.pathname;
+                if (path && path.charAt(path.length - 1) !== "/" && !/\.[a-zA-Z0-9]+$/.test(path)) {
+                    window.location.replace(path + "/" + window.location.search + window.location.hash);
+                    return true;
+                }
+                return false;
+            }
+
+            function assetUrl(relativePath) {
+                var encoded = String(relativePath).split("/").map(encodeURIComponent).join("/");
+                try {
+                    return new URL(encoded, document.baseURI).href;
+                } catch (err) {
+                    return encoded;
+                }
             }
 
             function preloadImage(url) {
                 return new Promise(function (resolve, reject) {
                     const img = new Image();
                     img.onload = function () { resolve(url); };
-                    img.onerror = function (err) { reject(err || new Error("Bild konnte nicht geladen werden: " + url)); };
+                    img.onerror = function () { reject(new Error("Bild konnte nicht geladen werden: " + url)); };
                     img.src = url;
                 });
             }
 
-            function showNextSlide() {
-                const nextIndex = currentIndex % totalImages + 1;
+            function playlistFromEmbedded() {
+                var data = window.SLIDESHOW_ABFOLGE;
+                if (!data || !Array.isArray(data.ordner) || data.ordner.length === 0) {
+                    return null;
+                }
+                var urls = [];
+                data.ordner.forEach(function (folder) {
+                    var names = (data.bilder && data.bilder[folder]) || [];
+                    names.forEach(function (name) {
+                        urls.push(assetUrl(folder + "/" + name));
+                    });
+                    console.log("Slideshow-Ordner \"" + folder + "\": " + names.length + " Bilder");
+                });
+                return { folders: data.ordner, urls: urls };
+            }
+
+            function showUrlOnIncomingSlide(url) {
                 const incomingSlideIndex = 1 - activeSlideIndex;
                 const activeSlide = slides[activeSlideIndex];
                 const incomingSlide = slides[incomingSlideIndex];
+                const activeImg = slideImgs[activeSlideIndex];
+                const incomingImg = slideImgs[incomingSlideIndex];
 
-                const url = getImageUrl(currentIndex);
+                return preloadImage(url).then(function (loadedUrl) {
+                    incomingImg.src = loadedUrl;
 
-                preloadImage(url).then(function (loadedUrl) {
-                    incomingSlide.style.backgroundImage = "url('" + loadedUrl + "')";
-
-                    // Ken-Burns-Animation für neue Slide zurücksetzen und neu starten
-                    activeSlide.classList.remove("kenburns");
-                    incomingSlide.classList.remove("kenburns");
-
-                    // Forciere Reflow, damit die Animation zuverlässig neu startet
-                    void incomingSlide.offsetWidth;
+                    if (activeImg) {
+                        activeImg.classList.remove("kenburns");
+                    }
+                    incomingImg.classList.remove("kenburns");
+                    void incomingImg.offsetWidth;
 
                     activeSlide.classList.remove("active");
-                    incomingSlide.classList.add("active", "kenburns");
+                    incomingSlide.classList.add("active");
+                    incomingImg.classList.add("kenburns");
 
                     activeSlideIndex = incomingSlideIndex;
+                });
+            }
+
+            function showNextSlide() {
+                if (imageUrls.length === 0) {
+                    return;
+                }
+
+                const nextIndex = (currentIndex + 1) % imageUrls.length;
+                const url = imageUrls[nextIndex];
+
+                showUrlOnIncomingSlide(url).then(function () {
                     currentIndex = nextIndex;
                 }).catch(function (err) {
                     console.error(err);
-                    // Im Fehlerfall Bildindex trotzdem weiterdrehen
                     currentIndex = nextIndex;
                 });
             }
 
-            // Initiales Bild setzen
             (function initSlideshow() {
-                const initialUrl = getImageUrl(currentIndex);
-                preloadImage(initialUrl).then(function (loadedUrl) {
-                    slideA.style.backgroundImage = "url('" + loadedUrl + "')";
+                if (ensureTrailingSlash()) {
+                    return;
+                }
+
+                var playlist = playlistFromEmbedded();
+                if (!playlist || playlist.urls.length === 0) {
+                    console.error("Keine Slideshow-Bilder gefunden.");
+                    return;
+                }
+
+                imageUrls = playlist.urls;
+                currentIndex = 0;
+                document.body.setAttribute("data-slideshow-count", String(imageUrls.length));
+                document.body.setAttribute("data-slideshow-folders", playlist.folders.join(" | "));
+                document.body.setAttribute("data-slideshow-first", imageUrls[0]);
+                document.body.setAttribute("data-slideshow-last", imageUrls[imageUrls.length - 1]);
+                console.log("Slideshow: " + imageUrls.length + " Bilder in " + playlist.folders.length + " Ordnern");
+
+                preloadImage(imageUrls[0]).then(function (loadedUrl) {
+                    imgA.src = loadedUrl;
+                    imgA.classList.add("kenburns");
                 }).catch(function (err) {
                     console.error("Initiales Bild konnte nicht geladen werden:", err);
                 });
+
                 setInterval(showNextSlide, slideIntervalMs);
             })();
 
